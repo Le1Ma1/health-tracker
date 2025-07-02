@@ -1,16 +1,13 @@
-from telegram import Update
-from telegram.ext import Application, MessageHandler, ContextTypes, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from config import BOT_TOKEN
-from tracker import log_to_sheet, classify
+from scheduler import start_set_reminder, handle_reminder_time
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_text = update.message.text
-    category = classify(user_text)
-    log_to_sheet(category, user_text)
-    await update.message.reply_text(f"✅ 已記錄：{category}｜內容：「{user_text}」")
+def main():
+    app = Application.builder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("set_reminder", start_set_reminder))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_reminder_time))
+    print("🤖 HealthTracker is running...")
+    app.run_polling()
 
 if __name__ == "__main__":
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
-    print("🤖 HealthTracker Bot is running...")
-    app.run_polling()
+    main()
